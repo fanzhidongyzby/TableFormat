@@ -31,7 +31,7 @@ If you need to define your own separators, some options are provided by table pa
 
 Following APIs are provided:<br>
 * `func Format (data string) string` : to format a string to table style<br>
-* `func Format (m map[string]string) string` : to format a map to table style<br>
+* `func FormatMap (m map[string]string) string` : to format a map to table style<br>
 
 ## Options
 
