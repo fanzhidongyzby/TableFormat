@@ -21,7 +21,7 @@ var (
 	//what to be filled in blank table field when row's too short
 	BlankFilling string = ""
 
-	//what to be filled in blank header field when row's too short
+	//what to be filled in blank header field when row's too long
 	BlankFillingForHeader string = ""
 
 	//discard more columns or not when row's too long

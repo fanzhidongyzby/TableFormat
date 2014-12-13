@@ -21,24 +21,16 @@ fmtStr := Format(str)
 fmt.Print(fmtStr)
 ```
 
-Its output in console is:
-┌────┬───┬───────┬───────┐
-│ ID │   │  Num  │ Digit │
-├────┼───┼───────┼───────┤
-│ 1  │ 2 │ 3你好 │       │
-├────┼───┼───────┼───────┤
-│ 4  │   │   5   │       │
-├────┼───┼───────┼───────┤
-│ 7  │ 8 │   9   │ 10 11 │
-└────┴───┴───────┴───────┘
-In default, table rows are separated by '\n' and columns are separated by space character, including ' ', '\t', '\v', '\b', '\f' and son on.
-If you need to define your own separators, some options are provided by table package. See the options below for details.
+Its output in console is:<br>
+[![image]](https://github.com/fanzhidongyzby/TableFormat/image/output.jpg)
+In default, table rows are separated by '\n' and columns are separated by space character, including ' ', '\t', '\v', '\b', '\f' and son on.short
+If you need to define your own separators, some options are provided by table package. See the options below for details.<br>
 
 ## APIs
 
-Following APIs are provided:
-`func Format (data string) string` : to format a string to table style
-`func Format (m map[string]string) string` : to format a map to table style
+Following APIs are provided:<br>
+`func Format (data string) string` : to format a string to table style<br>
+`func Format (m map[string]string) string` : to format a map to table style<br>
 
 ## Options
 
