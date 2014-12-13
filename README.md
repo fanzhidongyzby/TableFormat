@@ -23,7 +23,7 @@ fmt.Print(fmtStr)
 ```
 
 Its output in console is:<br>
-![](https://github.com/fanzhidongyzby/TableFormat/blob/master/image/output.jpg)
+![](https://github.com/fanzhidongyzby/TableFormat/blob/master/image/output.jpg)<br>
 In default, table rows are separated by '\n' and columns are separated by space character, including ' ', '\t', '\v', '\b', '\f' and son on.<br>
 If you need to define your own separators, some options are provided by table package. See the options below for details.<br>
 
