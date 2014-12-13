@@ -11,6 +11,7 @@ TableFormat is a formatting tool for string in Go programing language, which can
 * Use `table.Format` to format your string
 
 ## Demo
+
 For the code below:
 ```go
 str := ` ID _ Num Digit
@@ -22,20 +23,19 @@ fmt.Print(fmtStr)
 ```
 
 Its output in console is:<br>
-[![image]](https://github.com/fanzhidongyzby/TableFormat/image/output.jpg)
-In default, table rows are separated by '\n' and columns are separated by space character, including ' ', '\t', '\v', '\b', '\f' and son on.short
+![](https://github.com/fanzhidongyzby/TableFormat/blob/master/image/output.jpg)
+In default, table rows are separated by '\n' and columns are separated by space character, including ' ', '\t', '\v', '\b', '\f' and son on.<br>
 If you need to define your own separators, some options are provided by table package. See the options below for details.<br>
 
 ## APIs
 
 Following APIs are provided:<br>
-`func Format (data string) string` : to format a string to table style<br>
-`func Format (m map[string]string) string` : to format a map to table style<br>
+* `func Format (data string) string` : to format a string to table style<br>
+* `func Format (m map[string]string) string` : to format a map to table style<br>
 
 ## Options
 
-Follow Options are provided:
-
+Follow Options are provided:<br>
 * `RowSeparator string = "\n"			//Separate rows`
 * `ColumnSeparator string = ""			//Separate columns, empty string means all the space characters`
 * `Placeholder string = "_"				//Represent an empty table field`
