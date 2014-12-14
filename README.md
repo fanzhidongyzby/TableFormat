@@ -14,12 +14,21 @@ TableFormat is a formatting tool for string in Go programing language, which can
 
 For the code below:
 ```go
-str := ` ID _ Num Digit
-	1 2 3你好
-	4 _ 5 
-	7 8 9 10 11`
-fmtStr := Format(str)
-fmt.Print(fmtStr)
+package main
+
+import (
+	"fmt"
+	"github.com/fanzhidongyzby/table"
+)
+
+func main() {
+	str := ` ID _ Num Digit
+		1 2 3你好
+		4 _ 5 
+		7 8 9 10 11`
+	fmtStr := table.Format(str)
+	fmt.Print(fmtStr)
+}
 ```
 
 Its output in console is:<br>
