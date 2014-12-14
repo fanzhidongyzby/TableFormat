@@ -45,15 +45,15 @@ Following APIs are provided:<br>
 ## Options
 
 Follow Options are provided:<br>
-* `RowSeparator string = "\n"			//Separate rows`
-* `ColumnSeparator string = ""			//Separate columns, empty string means all the space characters`
-* `Placeholder string = "_"				//Represent an empty table field`
-* `BlankFilling string = ""				//What to be filled in blank table field when row's too short`
-* `BlankFillingForHeader string = ""	//What to be filled in blank header field when row's too long`
-* `ColOverflow bool = true				//Discard more columns or not when row's too long`
-* `UseBoard bool = true					//Use utf8 character to print board`
-* `SpaceAlt byte = ' '					//What to replace \n \b \t ...`
-* `OverFlowSeparator string = " "		//What to join overflow columns`
-* `CenterFilling byte = " "				//What to charactor into field in order to centralize`
+* `RowSeparator string = "\n"           //Separate rows`
+* `ColumnSeparator string = ""          //Separate columns, empty string means all the space characters`
+* `Placeholder string = "_"             //Represent an empty table field`
+* `BlankFilling string = ""             //What to be filled in blank table field when row's too short`
+* `BlankFillingForHeader string = ""    //What to be filled in blank header field`
+* `ColOverflow bool = true              //Don't discard more columns or not when row's too long`
+* `UseBoard bool = true                 //Use utf8 character to print board`
+* `SpaceAlt byte = ' '                  //What to replace \n \b \t ...`
+* `OverFlowSeparator string = " "       //What to join overflow columns`
+* `CenterFilling byte = " "             //What to be filled into field in order to centralize`
 
 
