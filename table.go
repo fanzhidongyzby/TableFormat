@@ -2,6 +2,8 @@ package table
 
 import (
 	"bytes"
+	"fmt"
+	"reflect"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -328,4 +330,69 @@ func FormatMap(m map[string]string) string {
 
 	//format string
 	return Format(buf.String())
+}
+
+//convert interface for user
+type Convertable interface {
+	Convert(field interface{}, typeStr string) string
+}
+
+//table format object
+func FormatObj(obj interface{}) (str string) {
+	return Format(encodeObj(obj))
+}
+
+//encode object to text
+func encodeObj(obj interface{}) (str string) {
+	//ignore all the panic
+	defer func() {
+		if r := recover(); r != nil {
+
+			fmt.Println(r)
+			str = ""
+		}
+	}()
+
+	//reflect type and value
+	t := reflect.TypeOf(obj)
+	v := reflect.ValueOf(obj)
+
+	var buf bytes.Buffer
+	buf.WriteString("Name Value\n")
+
+	//format struct
+	if t.Kind() == reflect.Struct {
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+
+			//get field name and value
+			name := field.Name
+			value := v.FieldByName(field.Name).Interface()
+
+			//process tag: `table:"-|<newName>[,<newType>]"`
+			tag := field.Tag.Get("table")
+			if tag != "" {
+				//ignore field
+				if tag == "-" {
+					continue
+				}
+
+				//tokenize
+				cmds := strings.Split(tag, ",")
+				num := len(cmds)
+				if num > 0 && cmds[0] != "" {
+					name = cmds[0]
+				}
+				if num > 1 && cmds[1] != "" {
+					if o, ok := obj.(Convertable); ok {
+						value = o.Convert(value, cmds[1])
+					} 
+				}
+			}
+
+			buf.WriteString(fmt.Sprintf("%s\v%v\n", name, value))
+		}
+	}
+
+	return buf.String()
 }
