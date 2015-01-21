@@ -40,6 +40,9 @@ var (
 
 	//what to fill into field in order to centralize
 	CenterFilling byte = ' '
+
+	//whether ignore empty header when all header fields are placeholder
+	IgnoreEmptyHeader bool = true
 )
 
 //split str and filt empty line
@@ -118,19 +121,36 @@ func preProcess(data string) [][]string {
 		}
 	}
 
-	//handle empty table
 	rowNum := len(lines)
+
+	//handle empty table
 	if rowNum == 0 {
 		//use place holder to represent a empty table
 		return [][]string{{string(CenterFilling) + BlankFillingForHeader + string(CenterFilling)}}
 	}
-	tb := make([][]string, len(lines))
 
 	//get columns
 	colNum := len(getFields(lines[0]))
 	//max width of each column
 	colWidth := make([]int, colNum)
 
+	//process empty header
+	if rowNum > 1 && IgnoreEmptyHeader {
+		header := getFields(lines[0])
+		ignore := true
+		for _, val := range header {
+			if val != Placeholder {
+				ignore = false
+				break
+			}
+		}
+		if ignore {
+			lines = lines[1:]
+			rowNum--
+		}
+	}
+
+	tb := make([][]string, rowNum)
 	for row, line := range lines {
 		tb[row] = make([]string, colNum)
 
@@ -323,7 +343,7 @@ func Format(data string) string {
 func FormatMap(m map[string]string) string {
 	//convert map to string
 	var buf bytes.Buffer
-	buf.WriteString("Key\vValue\n")
+	buf.WriteString("_\v_\n")
 	for key, value := range m {
 		buf.WriteString(key + "\v" + value + "\n")
 	}
@@ -358,7 +378,7 @@ func encodeObj(obj interface{}) (str string) {
 	v := reflect.ValueOf(obj)
 
 	var buf bytes.Buffer
-	buf.WriteString("Name Value\n")
+	buf.WriteString("_ _\n")
 
 	//format struct
 	if t.Kind() == reflect.Struct {
@@ -386,7 +406,7 @@ func encodeObj(obj interface{}) (str string) {
 				if num > 1 && cmds[1] != "" {
 					if o, ok := obj.(Convertable); ok {
 						value = o.Convert(value, cmds[1])
-					} 
+					}
 				}
 			}
 
