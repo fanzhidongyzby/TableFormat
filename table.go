@@ -45,6 +45,20 @@ var (
 	IgnoreEmptyHeader bool = true
 )
 
+func Reset() {
+	RowSeparator = "\n"
+	ColumnSeparator = ""
+	Placeholder = "_"
+	BlankFilling = ""
+	BlankFillingForHeader = ""
+	ColOverflow = true
+	UseBoard = true
+	SpaceAlt = ' '
+	OverFlowSeparator = " "
+	CenterFilling = ' '
+	IgnoreEmptyHeader = true
+}
+
 //split str and filt empty line
 func getLines(str string) []string {
 	var lines []string
@@ -135,7 +149,7 @@ func preProcess(data string) [][]string {
 	colWidth := make([]int, colNum)
 
 	//process empty header
-	if rowNum > 1 && IgnoreEmptyHeader {
+	if IgnoreEmptyHeader {
 		header := getFields(lines[0])
 		ignore := true
 		for _, val := range header {
@@ -367,7 +381,6 @@ func encodeObj(obj interface{}) (str string) {
 	//ignore all the panic
 	defer func() {
 		if r := recover(); r != nil {
-
 			fmt.Println(r)
 			str = ""
 		}
