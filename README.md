@@ -55,4 +55,5 @@ Follow Options are provided:<br>
 * `OverFlowSeparator string = " "       //What to join overflow columns`
 * `CenterFilling byte = " "             //What to be filled into field in order to centralize`
 * `IgnoreEmptyHeader bool = true		//Whether ignore empty header when all header fields are placeholder`
-User `defer table.Reset()` to confirm all the options set to default after your last configuration.
+<br>
+Use `defer table.Reset()` to confirm all the options set to default after your last configuration.
