@@ -2,13 +2,13 @@
 
 ## Introduction
 
-TableFormat is a formatting tool for string in Go programing language, which can convert a string to table style with UTF-8 characters.
+TableFormat is a formatting tool for type in Go programing language, which can convert any type to table style with UTF-8 characters.
 
 ## Usage
 
 * Install by `go get github.com/fanzhidongyzby/TableFormat`
 * Import package `github.com/fanzhidongyzby/table`
-* Use `table.Format` to format your string
+* Use `table.Format` to format your type
 
 ## Demo
 
@@ -55,4 +55,4 @@ Follow Options are provided:<br>
 * `OverFlowSeparator string = " "       //What to join overflow columns`
 * `CenterFilling byte = " "             //What to be filled into field in order to centralize`
 * `IgnoreEmptyHeader bool = true		//Whether ignore empty header when all header fields are placeholder`
-
+User `defer table.Reset()` to confirm all the options set to default after your last configuration.
