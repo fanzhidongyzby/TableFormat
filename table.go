@@ -75,22 +75,26 @@ Description: Any type which implements this interface
 		Width int `table:"b, meter"`
 	}
 
-	func (this Rect) Convert(field interface{}, typeStr string) string {
+	func (this Rect) Convert(field interface{}, typeStr string) (str string) {
 		switch typeStr {
-		case "":
-			str = fmt.Sprintf("Rect:[%d*%d]", this.Length, this.Width)
 		case "meter":
 			if v, ok := field.(int); ok {
 				str = fmt.Sprintf("%dm", v)
 			}
 		}
+		return str
 	}
+
+	The common style of table tag defined in the struct is:
+	`table : [name] [,type] [,nolist]`
+	1. 'name' renames the field in the table, if 'name' is '-', it means the field is totoally ignored
+	2. 'type' allows user define the convertion behavior of the field
+	3. 'nolist' defines whether the field appears when format object list or map
 
 Parameters:
 	field: Represents any field's value in struct
 	typeStr: Type defined in struct's table tag, represents
-		different type convertion. It means convert the total
-		type to string when set it empty(of course field ignored).
+		different type convertion.
 */
 type Convertable interface {
 	Convert(field interface{}, typeStr string) string
@@ -120,16 +124,7 @@ func encode(obj interface{}) (str string) {
 
 //encode any type
 func encodeAny(v reflect.Value) (str string) {
-	t := v.Type()
-	obj := v.Interface()
-
-	//raw string
-	if _, ok := obj.(RawString); ok {
-		return encodeRawString(v)
-	}
-
-	//other types
-	switch t.Kind() {
+	switch v.Kind() {
 	case reflect.Ptr, reflect.Interface:
 		str = encodeAny(v.Elem())
 	case reflect.String:
@@ -143,7 +138,7 @@ func encodeAny(v reflect.Value) (str string) {
 	case reflect.Func:
 		str = encodeFunc(v)
 	default:
-		str = encodePlain(v)
+		_, str = encodePlain(v)
 	}
 
 	return str
@@ -165,13 +160,18 @@ func encodeRawString(v reflect.Value) (str string) {
 //string type, classic format type
 func encodeString(v reflect.Value) (str string) {
 	var buf bytes.Buffer
-	t := v.Type()
-	obj := v.Interface()
-
-	if t.Kind() != reflect.String {
+	if v.Kind() != reflect.String {
 		return buf.String()
 	}
 
+	obj := v.Interface()
+
+	//raw string
+	if _, ok := obj.(RawString); ok {
+		return encodeRawString(v)
+	}
+
+	//normal string
 	if o, ok := obj.(string); ok {
 		buf.WriteString(createRow(o))
 	}
@@ -180,48 +180,70 @@ func encodeString(v reflect.Value) (str string) {
 }
 
 //function type, get the function name
-func encodeFunc(v reflect.Value) (str string) {
+func encodePlainFunc(v reflect.Value) (str string) {
 	var buf bytes.Buffer
-	t := v.Type()
 
-	if t.Kind() != reflect.Func {
+	if v.Kind() != reflect.Func {
 		return buf.String()
 	}
 
-	buf.WriteString(createEmptyHeader(1))
 	buf.WriteString(createRow(runtime.FuncForPC(v.Pointer()).Name()))
 
 	return buf.String()
 }
 
-//base types
-func encodePlain(v reflect.Value) (str string) {
-	obj := v.Interface()
+//function type, get the function name
+func encodeFunc(v reflect.Value) (str string) {
+	var buf bytes.Buffer
 
-	if o, ok := obj.(Convertable); ok {
-		str = o.Convert(nil, "")
-	} else {
-		str = fmt.Sprintf("%v", obj)
+	if v.Kind() != reflect.Func {
+		return buf.String()
 	}
 
-	return str
+	buf.WriteString(createEmptyHeader(1))
+	buf.WriteString(encodePlainFunc(v))
+
+	return buf.String()
+}
+
+//base types
+func encodePlain(v reflect.Value) (key, str string) {
+	key = Placeholder
+	switch v.Kind() {
+	case reflect.Invalid:
+
+	case reflect.Ptr, reflect.Interface:
+		key, str = encodePlain(v.Elem())
+	case reflect.Struct:
+		key, str = encodePlainStruct(v)
+	case reflect.Func:
+		str = encodePlainFunc(v)
+	default:
+		str = fmt.Sprint(v.Interface())
+	}
+
+	return key, str
 }
 
 //map type
 func encodeMap(v reflect.Value) (str string) {
 	var buf bytes.Buffer
-	t := v.Type()
 
-	if t.Kind() != reflect.Map {
+	if v.Kind() != reflect.Map {
 		return buf.String()
 	}
 
-	buf.WriteString(createEmptyHeader(2))
-
 	keys := v.MapKeys()
-	for _, key := range keys {
+	for i, key := range keys {
 		value := v.MapIndex(key)
-		buf.WriteString(createRow(encodePlain(key), encodePlain(value)))
+
+		k1, v1 := encodePlain(key)
+		k2, v2 := encodePlain(value)
+
+		if i == 0 {
+			buf.WriteString(createRow(k1, k2))
+		}
+		buf.WriteString(createRow(v1, v2))
 	}
 	return buf.String()
 }
@@ -229,35 +251,69 @@ func encodeMap(v reflect.Value) (str string) {
 //array, slice type
 func encodeList(v reflect.Value) (str string) {
 	var buf bytes.Buffer
-	t := v.Type()
 
-	if t.Kind() != reflect.Array && t.Kind() != reflect.Slice {
+	if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
 		return buf.String()
 	}
 
-	buf.WriteString(createEmptyHeader(2))
-
 	//format list
-	size := v.Len()
-	for i := 0; i < size; i++ {
-		buf.WriteString(createRow(strconv.Itoa(i+1), encodePlain(v.Index(i))))
+	for i := 0; i < v.Len(); i++ {
+		key, val := encodePlain(v.Index(i))
+
+		if i == 0 {
+			buf.WriteString(createRow(Placeholder, key))
+		}
+		buf.WriteString(createRow(strconv.Itoa(i+1), val))
 	}
+
 	return buf.String()
+}
+
+//return key string and value string
+func encodePlainStruct(v reflect.Value) (string, string) {
+	_, _, keys, vals := processStruct(v)
+
+	if len(keys) == 0 {
+		keys = []string{Placeholder}
+		vals = []string{fmt.Sprint(v.Interface())}
+	}
+
+	return createRow(keys...), createRow(vals...)
 }
 
 //struct type
 func encodeStruct(v reflect.Value) (str string) {
 	var buf bytes.Buffer
-	t := v.Type()
-	obj := v.Interface()
 
-	if t.Kind() != reflect.Struct {
-		return buf.String()
+	keys, vals, _, _ := processStruct(v)
+	if len(keys) == 0 {
+		return fmt.Sprint(v.Interface())
 	}
 
 	buf.WriteString(createEmptyHeader(2))
 
+	for i := 0; i < len(keys); i++ {
+		buf.WriteString(createRow(keys[i], vals[i]))
+	}
+
+	return buf.String()
+}
+
+//process struct, return objfmt fields and listfmt fields
+func processStruct(v reflect.Value) (detKeys, detVals, absKeys, absVals []string) {
+	detKeys = []string{}
+	detVals = []string{}
+	absKeys = []string{}
+	absVals = []string{}
+
+	obj := v.Interface()
+
+	if v.Kind() != reflect.Struct {
+		return detKeys, detVals, absKeys, absVals
+	}
+
 	//struct fields
+	t := v.Type()
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
@@ -266,33 +322,49 @@ func encodeStruct(v reflect.Value) (str string) {
 		value := v.FieldByName(field.Name)
 		val := value.Interface()
 
-		//process tag: `table:"-|<newName>[,<newType>]"`
 		tag := field.Tag.Get("table")
-		if tag != "" {
-			//ignore field
-			if tag == "-" {
-				continue
-			}
+		nameTag, typeTag, listTag := parseTag(tag)
 
-			//tokenize
-			cmds := strings.Split(tag, ",")
-			num := len(cmds)
-			if num > 0 && cmds[0] != "" {
-				name = cmds[0]
-			}
-			if num > 1 && cmds[1] != "" {
-				if o, ok := obj.(Convertable); ok {
-					val = o.Convert(val, cmds[1])
-				}
-			}
-		} else {
-			//no tag
-			val = encodePlain(value)
+		//name tag
+		if nameTag == "-" {
+			continue
+		} else if nameTag != "" {
+			name = nameTag
 		}
 
-		buf.WriteString(createRow(name, fmt.Sprintf("%v", val)))
+		//type tag
+		if o, ok := obj.(Convertable); ok && typeTag != "" {
+			val = o.Convert(val, typeTag)
+		}
+
+		//list tag
+		valStr := fmt.Sprintf("%v", val)
+		detKeys = append(detKeys, name)
+		detVals = append(detVals, valStr)
+		if listTag != "nolist" {
+			absKeys = append(absKeys, name)
+			absVals = append(absVals, valStr)
+		}
 	}
-	return buf.String()
+	return detKeys, detVals, absKeys, absVals
+}
+
+//parse tag, process tag: `table:"-|<newName>[,<newType>][,<nolist>]"`
+func parseTag(tag string) (nameTag, typeTag, listTag string) {
+	//tokenize
+	values := strings.Split(tag, ",")
+	num := len(values)
+	if num > 0 {
+		nameTag = values[0]
+	}
+	if num > 1 {
+		typeTag = values[1]
+	}
+	if num > 2 {
+		listTag = values[2]
+	}
+
+	return nameTag, typeTag, listTag
 }
 
 //merge placehold woth col sep
@@ -306,16 +378,20 @@ func createEmptyHeader(colNum int) string {
 
 //merge fields with col sep
 func createRow(fields ...string) string {
-	sep := "\v"
+	sep := " "
 	if ColumnSeparator != "" {
 		sep = ColumnSeparator
 	}
 
 	var buf bytes.Buffer
-	for _, field := range fields {
-		buf.WriteString(field + sep)
+	for i, field := range fields {
+		field = strings.TrimSuffix(field, RowSeparator)
+		if i != 0 {
+			buf.WriteString(sep)
+		}
+		buf.WriteString(field)
 	}
-	buf.WriteString("\n")
+	buf.WriteString(RowSeparator)
 
 	return buf.String()
 }
