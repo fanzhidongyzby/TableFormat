@@ -108,6 +108,11 @@ func Format(obj interface{}) string {
 	return format(encode(obj))
 }
 
+//quick print
+func Print(obj interface{}) {
+	fmt.Print(Format(obj))
+}
+
 //encode object, ignore panics
 func encode(obj interface{}) (str string) {
 	//ignore all the panic
